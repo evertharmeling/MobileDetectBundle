@@ -15,27 +15,18 @@ use SunCat\MobileDetectBundle\DeviceDetector\MobileDetector;
 use SunCat\MobileDetectBundle\Helper\DeviceView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFunction;
 
 /**
  * MobileDetectExtension
  *
  * @author suncat2000 <nikolay.kotovsky@gmail.com>
  */
-class MobileDetectExtension extends \Twig_Extension
+class MobileDetectExtension extends AbstractExtension
 {
-    /**
-     * @var MobileDetector
-     */
     private $mobileDetector;
-
-    /**
-     * @var DeviceView
-     */
     private $deviceView;
-
-    /**
-     * @var array
-     */
     private $redirectConf;
 
     /**
@@ -43,13 +34,6 @@ class MobileDetectExtension extends \Twig_Extension
      */
     private $request;
 
-    /**
-     * MobileDetectExtension constructor.
-     *
-     * @param MobileDetector $mobileDetector
-     * @param DeviceView     $deviceView
-     * @param array          $redirectConf
-     */
     public function __construct(MobileDetector $mobileDetector, DeviceView $deviceView, array $redirectConf)
     {
         $this->mobileDetector = $mobileDetector;
@@ -57,25 +41,20 @@ class MobileDetectExtension extends \Twig_Extension
         $this->redirectConf = $redirectConf;
     }
 
-    /**
-     * Get extension twig function
-     *
-     * @return array
-     */
-    public function getFunctions()
+    public function getFunctions(): array
     {
         return array(
-            new \Twig_SimpleFunction('is_mobile', array($this, 'isMobile')),
-            new \Twig_SimpleFunction('is_tablet', array($this, 'isTablet')),
-            new \Twig_SimpleFunction('is_device', array($this, 'isDevice')),
-            new \Twig_SimpleFunction('is_full_view', array($this, 'isFullView')),
-            new \Twig_SimpleFunction('is_mobile_view', array($this, 'isMobileView')),
-            new \Twig_SimpleFunction('is_tablet_view', array($this, 'isTabletView')),
-            new \Twig_SimpleFunction('is_not_mobile_view', array($this, 'isNotMobileView')),
-            new \Twig_SimpleFunction('is_ios', array($this, 'isIOS')),
-            new \Twig_SimpleFunction('is_android_os', array($this, 'isAndroidOS')),
-            new \Twig_SimpleFunction('full_view_url', array($this, 'fullViewUrl'), array('is_safe' => array('html'))),
-            new \Twig_SimpleFunction('device_version', array($this, 'deviceVersion')),
+            new TwigFunction('is_mobile', array($this, 'isMobile')),
+            new TwigFunction('is_tablet', array($this, 'isTablet')),
+            new TwigFunction('is_device', array($this, 'isDevice')),
+            new TwigFunction('is_full_view', array($this, 'isFullView')),
+            new TwigFunction('is_mobile_view', array($this, 'isMobileView')),
+            new TwigFunction('is_tablet_view', array($this, 'isTabletView')),
+            new TwigFunction('is_not_mobile_view', array($this, 'isNotMobileView')),
+            new TwigFunction('is_ios', array($this, 'isIOS')),
+            new TwigFunction('is_android_os', array($this, 'isAndroidOS')),
+            new TwigFunction('full_view_url', array($this, 'fullViewUrl'), array('is_safe' => array('html'))),
+            new TwigFunction('device_version', array($this, 'deviceVersion')),
         );
     }
 
@@ -107,7 +86,7 @@ class MobileDetectExtension extends \Twig_Extension
      *
      * @return string
      */
-    public function fullViewUrl($addCurrentPathAndQuery = true)
+    public function fullViewUrl($addCurrentPathAndQuery = true): ?string
     {
         if (!isset($this->redirectConf[DeviceView::VIEW_FULL]['host'])) {
             // The host property has not been configured for the full view
@@ -140,106 +119,64 @@ class MobileDetectExtension extends \Twig_Extension
         return $result;
     }
 
-    /**
-     * Is mobile
-     *
-     * @return boolean
-     */
-    public function isMobile()
+    public function isMobile(): bool
     {
         return $this->mobileDetector->isMobile();
     }
 
-    /**
-     * Is tablet
-     *
-     * @return boolean
-     */
-    public function isTablet()
+    public function isTablet(): bool
     {
         return $this->mobileDetector->isTablet();
     }
 
     /**
-     * Is device
-     *
      * @param string $deviceName is[iPhone|BlackBerry|HTC|Nexus|Dell|Motorola|Samsung|Sony|Asus|Palm|Vertu|...]
-     *
-     * @return boolean
      */
-    public function isDevice($deviceName)
+    public function isDevice($deviceName): bool
     {
         $magicMethodName = 'is'.strtolower((string) $deviceName);
 
         return $this->mobileDetector->$magicMethodName();
     }
 
-    /**
-     * Is full view type
-     *
-     * @return boolean
-     */
-    public function isFullView()
+    public function isFullView(): bool
     {
         return $this->deviceView->isFullView();
     }
 
-    /**
-     * Is mobile view type
-     *
-     * @return boolean
-     */
-    public function isMobileView()
+    public function isMobileView(): bool
     {
         return $this->deviceView->isMobileView();
     }
 
-    /**
-     * Is tablet view type
-     *
-     * @return boolean
-     */
-    public function isTabletView()
+    public function isTabletView(): bool
     {
         return $this->deviceView->isTabletView();
     }
 
-    /**
-     * Is not mobile view type
-     *
-     * @return boolean
-     */
-    public function isNotMobileView()
+    public function isNotMobileView(): bool
     {
         return $this->deviceView->isNotMobileView();
     }
 
-    /**
-     * Is iOS
-     *
-     * @return boolean
-     */
-    public function isIOS()
+    public function isIOS(): bool
     {
         return $this->mobileDetector->isIOS();
     }
 
-    /**
-     * Is Android OS
-     *
-     * @return boolean
-     */
-    public function isAndroidOS()
+    public function isAndroidOS(): bool
     {
         return $this->mobileDetector->isAndroidOS();
     }
 
     /**
+     * Only used in MobileDetectExtensionTest? Could be refactored to inject the RequestStack in constructor?
+     *
      * Sets the request from the current scope.
      *
      * @param RequestStack $requestStack
      */
-    public function setRequestByRequestStack(RequestStack $requestStack = null)
+    public function setRequestByRequestStack(RequestStack $requestStack = null): void
     {
         if (null !== $requestStack) {
             $this->request = $requestStack->getMasterRequest();
